@@ -21,6 +21,8 @@ elixir.extend('templates', function (src, options) {
         search: '/**/*.hbs'
     }, options);
 
+    var watchPath = options.srcDir + options.search;
+
     config.saveTask('templates', {
         src: utilities.buildGulpSrc(src, options.srcDir),
         options: options
@@ -62,6 +64,6 @@ elixir.extend('templates', function (src, options) {
     });
 
     return config
-        .registerWatcher('templates', src)
+        .registerWatcher('templates', watchPath)
         .queueTask('templates');
 });
