@@ -1,6 +1,6 @@
 {
   "name": "laravel-elixir-handlebars",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Laravel Elixir Handlebars Extension",
   "main": "index.js",
   "scripts": {
