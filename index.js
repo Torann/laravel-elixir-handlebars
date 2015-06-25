@@ -17,11 +17,12 @@ elixir.extend('templates', function (src, options) {
         srcDir: config.assetsDir,
         outputDir: config.jsOutput,
         outputFile: 'templates.js',
+        declareSrcDir: true,
         search: '/**/*.hbs'
     }, options);
 
     config.saveTask('templates', {
-        src: "./" + utilities.buildGulpSrc(src + options.search, options.srcDir),
+        src: utilities.buildGulpSrc(src, options.srcDir),
         options: options
     });
 
@@ -30,7 +31,7 @@ elixir.extend('templates', function (src, options) {
         var dataSet = config.collections['templates'];
 
         var onError = function (e) {
-            new notification().error(e, 'Handlebars Template Compilation Failed!');
+            new notification().error(e, 'Handlebar Templates Compilation Failed!');
             this.emit('end');
         };
 
@@ -38,17 +39,17 @@ elixir.extend('templates', function (src, options) {
 
             var options = data.options;
 
-            return gulp.src(data.src)
+            return gulp.src(data.src + options.search)
                 .on('error', onError)
                 .pipe(handlebars())
                 // Wrap each template function in a call to Handlebars.template
                 .pipe(wrap('Handlebars.template(<%= contents %>)'))
                 // Declare template functions as properties and sub-properties of exports
                 .pipe(declare({
-                    root       : 'exports',
+                    root: 'exports',
                     noRedeclare: true, // Avoid duplicate declarations
                     processName: function (filePath) {
-                        return declare.processNameByPath(filePath.replace(options.srcDir + '/', ''));
+                        return declare.processNameByPath(filePath.replace(data.src, ''));
                     }
                 }))
                 // Concatenate down to a single file
@@ -56,7 +57,7 @@ elixir.extend('templates', function (src, options) {
                 // Add the Handlebars module in the final output
                 .pipe(wrap('var Handlebars = require("handlebars");\n <%= contents %>'))
                 .pipe(gulp.dest(options.outputDir))
-                .pipe(new notification().message('Handlebars Template Compiled'));
+                .pipe(new notification().message('Handlebar Templates Compiled'));
         }));
     });
 
