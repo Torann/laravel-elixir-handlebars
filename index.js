@@ -1,69 +1,61 @@
 var gulp          = require('gulp'),
-    elixir        = require('laravel-elixir'),
-    merge         = require('merge-stream'),
-    _             = require('underscore'),
+    Elixir        = require('laravel-elixir'),
     wrap          = require('gulp-wrap'),
     concat        = require('gulp-concat'),
     declare       = require('gulp-declare'),
-    handlebars    = require('gulp-handlebars'),
-    utilities     = require('laravel-elixir/ingredients/commands/Utilities'),
-    notification  = require('laravel-elixir/ingredients/commands/Notification');
+    handlebars    = require('gulp-handlebars');
 
-elixir.extend('templates', function (src, options) {
-    var config = this;
+var templatePath = 'resources/views/';
 
-    options = _.extend({
-        debug : !config.production,
-        srcDir: config.assetsDir,
-        outputDir: config.jsOutput,
-        outputFile: 'templates.js',
-        declareSrcDir: true,
-        search: '/**/*.hbs'
-    }, options);
+Elixir.extend('templates', function (src, output) {
+    new Elixir.Task('templates', function () {
 
-    var watchPath = options.srcDir + options.search;
+        var paths = prepGulpPaths(src, output);
 
-    config.saveTask('templates', {
-        src: utilities.buildGulpSrc(src, options.srcDir),
-        options: options
-    });
-
-    gulp.task('templates', function () {
-
-        var dataSet = config.collections['templates'];
+        this.log(paths.src, paths.output);
 
         var onError = function (e) {
-            new notification().error(e, 'Handlebar Templates Compilation Failed!');
+            new Elixir.Notification('Handlebar Templates Compilation Failed!');
             this.emit('end');
         };
 
-        return merge.apply(this, dataSet.map(function(data) {
+        return gulp.src(paths.src.path)
+            .on('error', onError)
+            .pipe(handlebars())
 
-            var options = data.options;
+            // Wrap each template function in a call to Handlebars.template
+            .pipe(wrap('Handlebars.template(<%= contents %>)'))
 
-            return gulp.src(data.src + options.search)
-                .on('error', onError)
-                .pipe(handlebars())
-                // Wrap each template function in a call to Handlebars.template
-                .pipe(wrap('Handlebars.template(<%= contents %>)'))
-                // Declare template functions as properties and sub-properties of exports
-                .pipe(declare({
-                    root: 'exports',
-                    noRedeclare: true, // Avoid duplicate declarations
-                    processName: function (filePath) {
-                        return declare.processNameByPath(filePath.replace(data.src, ''));
-                    }
-                }))
-                // Concatenate down to a single file
-                .pipe(concat(options.outputFile))
-                // Add the Handlebars module in the final output
-                .pipe(wrap('var Handlebars = require("handlebars");\n <%= contents %>'))
-                .pipe(gulp.dest(options.outputDir))
-                .pipe(new notification().message('Handlebar Templates Compiled'));
-        }));
-    });
+            // Declare template functions as properties and sub-properties of exports
+            .pipe(declare({
+                root: 'exports',
+                noRedeclare: true, // Avoid duplicate declarations
+                processName: function (filePath) {
+                    return declare.processNameByPath(filePath.substring(filePath.lastIndexOf('/')+1));
+                }
+            }))
 
-    return config
-        .registerWatcher('templates', watchPath)
-        .queueTask('templates');
+            // Concatenate down to a single file
+            .pipe(concat(paths.output.name))
+
+            // Add the Handlebars module in the final output
+            .pipe(wrap('var Handlebars = require("handlebars");\n <%= contents %>'))
+            .pipe(gulp.dest(paths.output.baseDir))
+            .pipe(new Elixir.Notification('Handlebar Templates Compiled'));
+    })
+        .watch(templatePath + '/**/*.+(hbs|handebars)');
 });
+
+
+/**
+ * Prep the Gulp src and output paths.
+ *
+ * @param  {string|array} src
+ * @param  {string|null}  output
+ * @return {object}
+ */
+var prepGulpPaths = function(src, output) {
+    return new Elixir.GulpPaths()
+        .src(src, templatePath)
+        .output(output || Elixir.config.get('config.js.outputFolder'), 'templates.js');
+};
