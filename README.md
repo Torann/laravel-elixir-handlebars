@@ -16,10 +16,8 @@ require('laravel-elixir-handlebars');
 elixir(function (mix) {
 
     // Handlebar templates
-    mix.templates('templates', {
-        srcDir: 'resources/assets', // Default
-        outputFile: 'templates.js'
-    });
-
+    mix.templates([
+        'templates/**/*.hbs' // Will search in 'resources/views/templates'
+    ]);
 });
 ```
