@@ -5,12 +5,12 @@ var gulp          = require('gulp'),
     declare       = require('gulp-declare'),
     handlebars    = require('gulp-handlebars');
 
-var templatePath = 'resources/views/';
-
-Elixir.extend('templates', function (src, output) {
+Elixir.extend('templates', function (src, output, basedir) {
+    var templatePath = basedir ? basedir : 'resources/views';
+    
     new Elixir.Task('templates', function () {
 
-        var paths = prepGulpPaths(src, output);
+        var paths = prepGulpPaths(src, output, templatePath);
 
         this.log(paths.src, paths.output);
 
@@ -54,8 +54,9 @@ Elixir.extend('templates', function (src, output) {
  * @param  {string|null}  output
  * @return {object}
  */
-var prepGulpPaths = function(src, output) {
+var prepGulpPaths = function(src, output, templatePath) {
     return new Elixir.GulpPaths()
         .src(src, templatePath)
         .output(output || Elixir.config.get('config.js.outputFolder'), 'templates.js');
 };
+
