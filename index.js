@@ -38,8 +38,6 @@ Elixir.extend('templates', function (src, output, basedir) {
             // Concatenate down to a single file
             .pipe(concat(paths.output.name))
 
-            // Add the Handlebars module in the final output
-            .pipe(wrap('var Handlebars = require("handlebars");\n <%= contents %>'))
             .pipe(gulp.dest(paths.output.baseDir))
             .pipe(new Elixir.Notification('Handlebar Templates Compiled'));
     })
