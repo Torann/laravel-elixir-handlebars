@@ -31,7 +31,7 @@ Elixir.extend('templates', function (src, output) {
                 root: 'exports',
                 noRedeclare: true, // Avoid duplicate declarations
                 processName: function (filePath) {
-                    return declare.processNameByPath(filePath.substring(filePath.lastIndexOf('/')+1));
+                    return declare.processNameByPath(filePath.substring(filePath.replace(/\\/g, '/').lastIndexOf('/')+1));
                 }
             }))
 
